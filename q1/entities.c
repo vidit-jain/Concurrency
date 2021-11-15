@@ -1,9 +1,11 @@
 #include "entities.h"
-TA *createTA() {
+TA *createTA(int id) {
 	TA *t = (TA *)malloc(sizeof(TA));
 	t->available = 1;
-	t->tutorialstaken = 1;
-
+    t->id = id;
+    t->course_id = -1;
+	t->tutorialstaken = 0;
+    pthread_mutex_init(&t->lock, NULL);
 	return t;
 }
 
@@ -22,22 +24,23 @@ Student *createStudent(double caliber, int submission_time,
 	return s;
 }
 
-Lab *createLab(char *name, int ta_count, int tutorialLimit) {
+Lab *createLab(char *name, int ta_count, int tutorial_limit, int id) {
 	Lab *t = (Lab *)malloc(sizeof(Lab));
 	t->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
 	strcpy(t->name, name);
 	t->ta_count = ta_count;
 	t->tas = (TA **)malloc(t->ta_count * sizeof(TA *));
 	for (int i = 0; i < ta_count; i++)
-		t->tas[i] = createTA();
+		t->tas[i] = createTA(i);
 	t->eligibleTAs = t->ta_count;
-	t->tutorial_limit = tutorialLimit;
+	t->tutorial_limit = tutorial_limit;
+    t->id = id;
 
 	return t;
 }
 
 Course *createCourse(char *name, double interest, int course_max_slot,
-					 const int *lab_ids, int lab_count) {
+					 const int *lab_ids, int lab_count, int id) {
 	Course *c = (Course *)malloc(sizeof(Course));
 	c->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
 	strcpy(c->name, name);
@@ -48,6 +51,6 @@ Course *createCourse(char *name, double interest, int course_max_slot,
 		c->lab_ids[i] = lab_ids[i];
 	c->course_max_slot = course_max_slot;
 	c->available = 1;
-
+    c->id = id;
 	return c;
 }
