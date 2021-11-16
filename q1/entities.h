@@ -49,6 +49,7 @@ struct lab {
 	int eligibleTAs;	// Number of TAs left that are allowed to take tutorials
 	int tutorial_limit; // Max number of tutorials a TA can take
 	pthread_mutex_t lock;
+    pthread_cond_t condition_lock;
 };
 Student *createStudent(double caliber, int submission_time,
 					   const int preferences[3], int id);

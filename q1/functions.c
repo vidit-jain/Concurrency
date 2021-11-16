@@ -84,9 +84,14 @@ void *studentThread(void *arg) {
 
 void *labThread(void *arg) {
 	Lab *lab = (Lab *)arg;
-	while (lab->eligibleTAs)
-		;
-	printf("Lab %s no longer has students available for TA ship\n", lab->name);
+
+    pthread_mutex_lock(&lab->lock);
+
+    pthread_cond_wait(&lab->condition_lock, &lab->lock);
+    printf("Lab %s no longer has students available for TA ship\n", lab->name);
+
+    pthread_mutex_unlock(&lab->lock);
+
 	return NULL;
 }
 int randomSeatAllocate(int course_max_slots) {
@@ -188,6 +193,9 @@ void *courseThread(void *arg) {
 
 						pthread_mutex_lock(&iiit_labs[lab_id]->lock);
 						iiit_labs[lab_id]->eligibleTAs--;
+                        if (iiit_labs[lab_id]->eligibleTAs == 0) {
+                            pthread_cond_signal(&iiit_labs[lab_id]->condition_lock);
+                        }
 						pthread_mutex_unlock(&iiit_labs[lab_id]->lock);
 
 					}
