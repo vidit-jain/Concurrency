@@ -5,6 +5,7 @@
 #include <time.h>
 
 int main() {
+    srand(time(0));
 	pthread_mutex_init(&seconds_lock, NULL);
 	// Input
 	scanf("%d %d %d", &student_count, &lab_count, &course_count);

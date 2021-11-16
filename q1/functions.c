@@ -127,18 +127,20 @@ int studentAllocateSeats(Course *c, int max_seats) {
 	for (int i = 0; i < student_count; i++) {
 		Student *s = students[i];
 		pthread_mutex_lock(&s->lock);
-		int course_pref = s->preferences[s->current_preference];
-		// If the student has submitted and this is the course it currently
-		// prefers, then assign is
-		if (c->id == course_pref && s->submitted) {
-			s->assigned_course = 1;
-            printf("Student %d has been allocated a seat in course %s\n", s->id, c->name);
-			allocated++;
-			if (allocated == max_seats) {
-				pthread_mutex_unlock(&s->lock);
-				break;
-			}
-		}
+        if (!s->assigned_course && s->current_preference != 3) {
+            int course_pref = s->preferences[s->current_preference];
+            // If the student has submitted and this is the course it currently
+            // prefers, then assign is
+            if (c->id == course_pref && s->submitted) {
+                s->assigned_course = 1;
+                printf("Student %d has been allocated a seat in course %s\n", s->id, c->name);
+                allocated++;
+                if (allocated == max_seats) {
+                    pthread_mutex_unlock(&s->lock);
+                    break;
+                }
+            }
+        }
 		pthread_mutex_unlock(&s->lock);
 	}
 	return allocated;
