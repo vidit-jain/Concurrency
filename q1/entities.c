@@ -2,10 +2,10 @@
 TA *createTA(int id) {
 	TA *t = (TA *)malloc(sizeof(TA));
 	t->available = 1;
-    t->id = id;
-    t->course_id = -1;
+	t->id = id;
+	t->course_id = -1;
 	t->tutorialstaken = 0;
-    pthread_mutex_init(&t->lock, NULL);
+	pthread_mutex_init(&t->lock, NULL);
 	return t;
 }
 
@@ -34,7 +34,7 @@ Lab *createLab(char *name, int ta_count, int tutorial_limit, int id) {
 		t->tas[i] = createTA(i);
 	t->eligibleTAs = t->ta_count;
 	t->tutorial_limit = tutorial_limit;
-    t->id = id;
+	t->id = id;
 
 	return t;
 }
@@ -51,6 +51,6 @@ Course *createCourse(char *name, double interest, int course_max_slot,
 		c->lab_ids[i] = lab_ids[i];
 	c->course_max_slot = course_max_slot;
 	c->available = 1;
-    c->id = id;
+	c->id = id;
 	return c;
 }
