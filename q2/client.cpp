@@ -121,8 +121,7 @@ int get_socket_fd(struct sockaddr_in *ptr)
 }
 ////////////////////////////////////////////////////////
 
-void begin_process()
-{
+void begin_process() {
     struct sockaddr_in server_obj;
     int socket_fd = get_socket_fd(&server_obj);
 
@@ -133,15 +132,12 @@ void begin_process()
     scanf("\n");
     while (requests--) {
         string to_send;
-        cout << "Enter msg: ";
         getline(cin, to_send);
         to_send += "\n";
         send_string_on_socket(socket_fd, to_send);
         int num_bytes_read;
         string output_msg;
         tie(output_msg, num_bytes_read) = read_string_from_socket(socket_fd, buff_sz);
-        cout << "Received: " << output_msg << endl;
-        cout << "====" << endl;
     }
 }
 

@@ -40,6 +40,7 @@ typedef long long LL;
 
 const int initial_msg_len = 256;
 int pool_size;
+pthread_cond_t client_lock;
 pthread_t *thread_pool;
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 queue<int> clients;
@@ -131,16 +132,17 @@ close_client_socket_ceremony:
 void* threadfunction(void* arg) {
     while (1) {
         pthread_mutex_lock(&queue_lock);
-        if (!clients.empty()) {
-            int p = clients.front();
-            clients.pop();
-            pthread_mutex_unlock(&queue_lock);
-            handle_connection(p);
+        while (clients.empty()) {
+            pthread_cond_wait(&client_lock, &queue_lock);
         }
-        else pthread_mutex_unlock(&queue_lock);
+        int p = clients.front();
+        clients.pop();
+        pthread_mutex_unlock(&queue_lock);
+        handle_connection(p);
     }
     return NULL;
 }
+// Hello
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
@@ -228,6 +230,7 @@ more precisely, a new socket that is dedicated to that particular client.
         // handle_connection(client_socket_fd);
         pthread_mutex_lock(&queue_lock);
         clients.push(client_socket_fd);
+        pthread_cond_signal(&client_lock);
         pthread_mutex_unlock(&queue_lock);
     }
 
