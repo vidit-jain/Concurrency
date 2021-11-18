@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-
+#include <bits/stdc++.h>
 /////////////////////////////
 #include <pthread.h>
 #include <iostream>
@@ -120,31 +120,70 @@ int get_socket_fd(struct sockaddr_in *ptr)
     return socket_fd;
 }
 ////////////////////////////////////////////////////////
-
-void begin_process() {
+struct abc {
+    int time;
+    char *x;
+};
+void* begin_process(void* arg) {
+    struct abc s = *((struct abc*)arg);
+    // char message = s.x;
+    string message(s.x);
+    int time = s.time;
+    // char* message = s.x;
+    // cout << message << " QQ\n";
+    // cout << time << " QQ\n";
+    sleep(time);
     struct sockaddr_in server_obj;
     int socket_fd = get_socket_fd(&server_obj);
 
 
     cout << "Connection to server successful" << endl;
-    int requests; 
-    cin >> requests;
-    scanf("\n");
-    while (requests--) {
-        string to_send;
-        getline(cin, to_send);
-        to_send += "\n";
-        send_string_on_socket(socket_fd, to_send);
-        int num_bytes_read;
-        string output_msg;
-        tie(output_msg, num_bytes_read) = read_string_from_socket(socket_fd, buff_sz);
-    }
+    // int requests; 
+    // cin >> requests;
+    // scanf("\n");
+    // string full_message = to_string(requests) + "\n";
+    // while (requests--) {
+    //     string to_send;
+    //     getline(cin, to_send);
+    //     to_send += "\n";
+    //     full_message += to_send;
+    // }
+    send_string_on_socket(socket_fd, message);
+    int num_bytes_read;
+    string output_msg;
+    tie(output_msg, num_bytes_read) = read_string_from_socket(socket_fd, buff_sz);
+    cout << output_msg << "\n";
+    return NULL;
 }
-
 int main(int argc, char *argv[])
 {
-
     int i, j, k, t, n;
-    begin_process();
+    int last_request = 0;
+    int request_count;
+    int fd;
+    cin >> request_count;
+    pthread_t user_requests[request_count];
+    vector<pair<int, string>> requests;
+    for (int i = 0; i < request_count; i++) {
+        string command;
+        int t;
+        cin >> t;
+        getline(cin, command);
+        requests.push_back({t, command});
+    }
+    for (int i = 0; i < request_count; i++) {
+        string x = to_string(i) + requests[i].second;
+        struct abc *container = (struct abc*) malloc(sizeof(struct abc));
+        char* q = (char*) x.c_str();
+        // cout << q << " YO YO JES\n";
+        container->x = (char*) malloc((strlen(q) + 1) * sizeof (char)); 
+        strcpy(container->x, q);
+        container->time = requests[i].first;
+        pthread_create(&user_requests[i], NULL, begin_process, (void *) container);
+    }
+
+    for (int i = 0; i < request_count; i++) {
+        pthread_join(user_requests[i], NULL);
+    }
     return 0;
 }

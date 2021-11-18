@@ -17,7 +17,7 @@
 #include <queue>
 using namespace std;
 /////////////////////////////
-
+#include<bits/stdc++.h>
 //Regular bold text
 #define BBLK "\e[1;30m"
 #define BRED "\e[1;31m"
@@ -45,7 +45,8 @@ pthread_t *thread_pool;
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 queue<int> clients;
 ////////////////////////////////////
-
+pthread_mutex_t dict_lock;
+map<int, string> dictionary;
 const LL buff_sz = 1048576;
 ///////////////////////////////////////////////////
 pair<string, int> read_string_from_socket(const int &fd, int bytes)
@@ -77,12 +78,110 @@ int send_string_on_socket(int fd, const string &s)
 
     return bytes_sent;
 }
+string insertDict(int key, string value) {
+    pthread_mutex_lock(&dict_lock);        
+    if (dictionary.find(key) == dictionary.end()) {
+        dictionary[key] = value;        
+        pthread_mutex_unlock(&dict_lock);        
+        return "Insertion successful";
+    }
+    else {
+        pthread_mutex_unlock(&dict_lock);        
+        return "Key already exists";
+    }
+}
+string deleteDict(int key) {
+    pthread_mutex_lock(&dict_lock);        
+    if (dictionary.find(key) != dictionary.end()) {
+        dictionary.erase(key);
+        pthread_mutex_unlock(&dict_lock);        
+        return "Deletion successful";
+    }
+    else {
+        pthread_mutex_unlock(&dict_lock);        
+        return "No such key exists";
+    }
 
+}
+string updateDict(int key, string value) {
+    pthread_mutex_lock(&dict_lock);        
+    if (dictionary.find(key) != dictionary.end()) {
+        dictionary[key] = value;        
+        pthread_mutex_unlock(&dict_lock);        
+        return value; 
+    }
+    else {
+        pthread_mutex_unlock(&dict_lock);        
+        return "Key already exists";
+    }
+
+}
+string concatDict(int key1, int key2) {
+    pthread_mutex_lock(&dict_lock);        
+    if (dictionary.find(key1) != dictionary.end() && dictionary.find(key2) != dictionary.end()) {
+        string val1 = dictionary[key1];
+        string val2 = dictionary[key2];
+        dictionary[key1] += val2;
+        dictionary[key2] += val1;
+        pthread_mutex_unlock(&dict_lock);
+        return val2 + val1;
+    }
+    else {
+        pthread_mutex_unlock(&dict_lock);
+        return "Concat failed as at least one of the keys does not exist";
+    }
+}
+string fetchDict(int key) {
+    pthread_mutex_lock(&dict_lock);        
+    if (dictionary.find(key) != dictionary.end()) {
+        string val = dictionary[key];
+        pthread_mutex_unlock(&dict_lock);        
+        return val;
+    }
+    else {
+        pthread_mutex_unlock(&dict_lock);        
+        return "Key does not exist";
+    }
+
+}
 ///////////////////////////////
-
+string parseQueries(vector<string>& x) {
+    if (x[1] == "insert") {
+        int key;
+        string value;
+        key = atoi(x[2].c_str());
+        value = x[3];
+        return insertDict(key, value);
+    }
+    else if (x[1] == "delete") {
+        int key;
+        key = atoi(x[2].c_str());
+        return deleteDict(key);
+    }
+    else if (x[1] == "update") {
+        int key;
+        string value;
+        key = atoi(x[2].c_str());
+        value = x[3];
+        return updateDict(key, value);
+    }
+    else if (x[1] == "concat") {
+        int key1, key2;
+        key1 = atoi(x[2].c_str());
+        key2 = atoi(x[3].c_str());
+        return concatDict(key1, key2);
+    }
+    else if (x[1] == "fetch") {
+        int key;
+        key = atoi(x[2].c_str());
+        return fetchDict(key);
+    }
+    else {
+        return "Invalid query";
+    }
+}
 void handle_connection(int client_socket_fd)
 {
-    // int client_socket_fd = *((int *)client_socket_fd_ptr);
     //####################################################
 
     int received_num, sent_num;
@@ -94,6 +193,17 @@ void handle_connection(int client_socket_fd)
     {
         string cmd;
         tie(cmd, received_num) = read_string_from_socket(client_socket_fd, buff_sz);
+        stringstream temp(cmd);
+        vector<string> x;
+        string word;
+        while (temp >> word) {
+            x.push_back(word);
+        }
+        // temp >> queryIndex;
+        // cout << queryIndex << " QUE\n";
+        // cout << temp.str() << " JJ\n";
+        // cout << x[0] << " " << x[1] << " JAJAJ\n";
+        string output = parseQueries(x);
         ret_val = received_num;
         // debug(ret_val);
         // printf("Read something\n");
@@ -104,12 +214,13 @@ void handle_connection(int client_socket_fd)
             goto close_client_socket_ceremony;
         }
         cout << "Client sent : " << cmd << endl;
-        if (cmd == "exit")
-        {
-            cout << "Exit pressed by client" << endl;
-            goto close_client_socket_ceremony;
-        }
-        string msg_to_send_back = "Ack: " + cmd;
+        // if (cmd == "exit")
+        // {
+        //     cout << "Exit pressed by client" << endl;
+        //     goto close_client_socket_ceremony;
+        // }
+        // string msg_to_send_back = "Ack: " + cmd;
+        string msg_to_send_back = x[0] + ": " + output + "\n"; 
 
         ////////////////////////////////////////
         // "If the server write a message on the socket and then close it before the client's read. Will the client be able to read the message?"
@@ -122,6 +233,7 @@ void handle_connection(int client_socket_fd)
             perror("Error while writing to client. Seems socket has been closed");
             goto close_client_socket_ceremony;
         }
+             goto close_client_socket_ceremony;
     }
 
 close_client_socket_ceremony:
