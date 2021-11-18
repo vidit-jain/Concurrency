@@ -128,12 +128,14 @@ void begin_process()
 
 
     cout << "Connection to server successful" << endl;
-    
-    while (true)
-    {
+    int requests; 
+    cin >> requests;
+    scanf("\n");
+    while (requests--) {
         string to_send;
         cout << "Enter msg: ";
         getline(cin, to_send);
+        to_send += "\n";
         send_string_on_socket(socket_fd, to_send);
         int num_bytes_read;
         string output_msg;
@@ -141,7 +143,6 @@ void begin_process()
         cout << "Received: " << output_msg << endl;
         cout << "====" << endl;
     }
-    // part;
 }
 
 int main(int argc, char *argv[])
