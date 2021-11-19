@@ -27,9 +27,7 @@ using namespace std;
 #define BCYN "\e[1;36m"
 #define ANSI_RESET "\x1b[0m"
 
-
-
-#define MAX_CLIENTS 4
+#define MAX_CLIENTS 100
 #define SERVER_PORT 8001
 #define MAX_KEY 101
 
@@ -43,91 +41,87 @@ map<int, string> dictionary;
 pthread_mutex_t key_lock[MAX_KEY];
 const int buff_sz = 1048576;
 
-pair<string, int> read_string_from_socket(const int &fd, int bytes) {
-	std::string output;
-	output.resize(bytes);
-
-	int bytes_received = read(fd, &output[0], bytes - 1);
-	if (bytes_received <= 0) {
-		cerr << "Failed to read data from socket. \n";
-	}
-
-	output[bytes_received] = 0;
-	output.resize(bytes_received);
-	return {output, bytes_received};
-}
-
-int send_string_on_socket(int fd, const string &s) {
-	int bytes_sent = write(fd, s.c_str(), s.length());
-	if (bytes_sent < 0) {
-		cerr << "Failed to SEND DATA via socket.\n";
-	}
-
-	return bytes_sent;
-}
+// Dictionary Queries
 string insertDict(int key, string value) {
+	string returnString;
+
 	pthread_mutex_lock(&key_lock[key]);
 	if (dictionary.find(key) == dictionary.end()) {
 		dictionary[key] = value;
-		pthread_mutex_unlock(&key_lock[key]);
-		return "Insertion successful";
+		returnString = "Insertion successful";
 	} else {
-		pthread_mutex_unlock(&key_lock[key]);
-		return "Key already exists";
+		returnString = "Key already exists";
 	}
+	pthread_mutex_unlock(&key_lock[key]);
+
+	return returnString;
 }
 string deleteDict(int key) {
+	string returnString;
+
 	pthread_mutex_lock(&key_lock[key]);
 	if (dictionary.find(key) != dictionary.end()) {
 		dictionary.erase(key);
-		pthread_mutex_unlock(&key_lock[key]);
-		return "Deletion successful";
+		returnString = "Deletion successful";
 	} else {
-		pthread_mutex_unlock(&key_lock[key]);
-		return "No such key exists";
+		returnString = "No such key exists";
 	}
+	pthread_mutex_unlock(&key_lock[key]);
+
+	return returnString;
 }
 string updateDict(int key, string value) {
+	string returnString;
+
 	pthread_mutex_lock(&key_lock[key]);
 	if (dictionary.find(key) != dictionary.end()) {
 		dictionary[key] = value;
-		pthread_mutex_unlock(&key_lock[key]);
-		return value;
+		returnString = value;
 	} else {
-		pthread_mutex_unlock(&key_lock[key]);
-		return "Key already exists";
+		returnString = "Key does not exist";
 	}
+	pthread_mutex_unlock(&key_lock[key]);
+
+	return returnString;
 }
 string concatDict(int key1, int key2) {
+	string returnString;
 	int lowKey = min(key1, key2), highKey = max(key1, key2);
+
 	pthread_mutex_lock(&key_lock[lowKey]);
 	pthread_mutex_lock(&key_lock[highKey]);
+
 	if (dictionary.find(key1) != dictionary.end() &&
 		dictionary.find(key2) != dictionary.end()) {
 		string val1 = dictionary[key1];
 		string val2 = dictionary[key2];
 		dictionary[key1] += val2;
 		dictionary[key2] += val1;
-		pthread_mutex_lock(&key_lock[highKey]);
-		pthread_mutex_lock(&key_lock[lowKey]);
-		return val2 + val1;
+		returnString = val2 + val1;
 	} else {
-		pthread_mutex_lock(&key_lock[highKey]);
-		pthread_mutex_lock(&key_lock[lowKey]);
-		return "Concat failed as at least one of the keys does not exist";
+		returnString =
+			"Concat failed as at least one of the keys does not exist";
 	}
+	pthread_mutex_unlock(&key_lock[highKey]);
+	pthread_mutex_unlock(&key_lock[lowKey]);
+
+	return returnString;
 }
 string fetchDict(int key) {
+	string returnString;
+
 	pthread_mutex_lock(&key_lock[key]);
 	if (dictionary.find(key) != dictionary.end()) {
 		string val = dictionary[key];
-		pthread_mutex_unlock(&key_lock[key]);
-		return val;
+		returnString = val;
 	} else {
-		pthread_mutex_unlock(&key_lock[key]);
-		return "Key does not exist";
+		returnString = "Key does not exist";
 	}
+	pthread_mutex_unlock(&key_lock[key]);
+
+	return returnString;
 }
+
 string parseQueries(vector<string> &tokens) {
 	if (tokens[1] == "insert") {
 		int key;
@@ -158,6 +152,30 @@ string parseQueries(vector<string> &tokens) {
 		return "Invalid query";
 	}
 }
+
+pair<string, int> read_string_from_socket(const int &fd, int bytes) {
+	std::string output;
+	output.resize(bytes);
+
+	int bytes_received = read(fd, &output[0], bytes - 1);
+	if (bytes_received <= 0) {
+		cerr << "Failed to read data from socket. \n";
+	}
+
+	output[bytes_received] = 0;
+	output.resize(bytes_received);
+	return {output, bytes_received};
+}
+
+int send_string_on_socket(int fd, const string &s) {
+	int bytes_sent = write(fd, s.c_str(), s.length());
+	if (bytes_sent < 0) {
+		cerr << "Failed to SEND DATA via socket.\n";
+	}
+
+	return bytes_sent;
+}
+
 void handle_connection(int client_socket_fd) {
 
 	string request;
@@ -169,7 +187,6 @@ void handle_connection(int client_socket_fd) {
 	if (received_num <= 0) {
 		printf("Server could not read msg sent from client\n");
 		close(client_socket_fd);
-		printf(BRED "Disconnected from client" ANSI_RESET "\n");
 		return;
 	}
 
@@ -182,7 +199,6 @@ void handle_connection(int client_socket_fd) {
 
 	string output = parseQueries(tokens);
 
-
 	pid_t thread_id = gettid();
 	string client_message =
 		tokens[0] + ":" + to_string(thread_id) + ":" + output + "\n";
@@ -194,7 +210,6 @@ void handle_connection(int client_socket_fd) {
 	}
 
 	close(client_socket_fd);
-	printf(BRED "Disconnected from client" ANSI_RESET "\n");
 }
 void *threadfunction(void *arg) {
 
@@ -204,7 +219,8 @@ void *threadfunction(void *arg) {
 		pthread_mutex_lock(&queue_lock);
 
 		// Wait till you are signaled and there are clients in the queue
-		while (clients.empty()) pthread_cond_wait(&client_lock, &queue_lock);
+		while (clients.empty())
+			pthread_cond_wait(&client_lock, &queue_lock);
 		int socket_fd = clients.front();
 		clients.pop();
 
@@ -220,18 +236,16 @@ int main(int argc, char *argv[]) {
 
 	// Finding thread pool size
 	if (argc != 2) {
-		cout << "invalid argument count\n";
+		cout << "Invalid argument count\n";
 		return 0;
 	}
 	pool_size = atoi(argv[1]);
-
 
 	// Creating the threadpool
 	thread_pool = (pthread_t *)malloc(pool_size * sizeof(pthread_t));
 	for (int i = 0; i < pool_size; i++) {
 		pthread_create(&thread_pool[i], NULL, threadfunction, NULL);
 	}
-
 
 	struct sockaddr_in serv_addr_obj, client_addr_obj;
 	int wel_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -264,14 +278,8 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 
-		printf(
-			BGRN
-			"New client connected from port number %d and IP %s \n" ANSI_RESET,
-			ntohs(client_addr_obj.sin_port),
-			inet_ntoa(client_addr_obj.sin_addr));
-
-
-		// Adding the client fd to the client queue, which will eventually be picked up by the worker threads
+		// Adding the client fd to the client queue, which will eventually be
+		// picked up by the worker threads
 		pthread_mutex_lock(&queue_lock);
 
 		clients.push(client_socket_fd);

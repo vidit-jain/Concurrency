@@ -30,7 +30,6 @@ using namespace std;
 #define BCYN "\e[1;36m"
 #define ANSI_RESET "\x1b[0m"
 
-
 #define SERVER_PORT 8001
 
 const int buff_sz = 1048576;
@@ -38,7 +37,7 @@ string read_string_from_socket(int fd) {
 	std::string output;
 	output.resize(buff_sz);
 
-	int bytes_received = read(fd, &output[0], buff_sz- 1);
+	int bytes_received = read(fd, &output[0], buff_sz - 1);
 	if (bytes_received <= 0) {
 		cerr << "Failed to read data from socket. Seems server has closed "
 				"socket\n";
@@ -48,7 +47,7 @@ string read_string_from_socket(int fd) {
 	output[bytes_received] = 0;
 	output.resize(bytes_received);
 
-    return output;
+	return output;
 }
 
 int send_string_on_socket(int fd, const string &s) {
@@ -82,23 +81,21 @@ int get_socket_fd(struct sockaddr_in *ptr) {
 
 	return socket_fd;
 }
-struct abc {
+struct userReq {
 	int time;
-	char *x;
+	char *command;
 };
 void *begin_process(void *arg) {
-	struct abc s = *((struct abc *)arg);
-	string message(s.x);
+	struct userReq s = *((struct userReq *)arg);
+	string message(s.command);
 	int time = s.time;
 	sleep(time);
 	struct sockaddr_in server_obj;
 	int socket_fd = get_socket_fd(&server_obj);
 
-	cout << "Connection to server successful" << endl;
-
 	send_string_on_socket(socket_fd, message);
 	string output_msg;
-    output_msg = read_string_from_socket(socket_fd);
+	output_msg = read_string_from_socket(socket_fd);
 
 	cout << output_msg;
 	return NULL;
@@ -117,18 +114,22 @@ int main(int argc, char *argv[]) {
 		getline(cin, command);
 		requests.push_back({t, command});
 	}
-	for (int i = 0; i < request_count; i++) {
-		string x = to_string(i) + requests[i].second;
-		struct abc *container = (struct abc *)malloc(sizeof(struct abc));
-		char *q = (char *)x.c_str();
 
-		container->x = (char *)malloc((strlen(q) + 1) * sizeof(char));
-		strcpy(container->x, q);
+	for (int i = 0; i < request_count; i++) {
+		string command = to_string(i) + requests[i].second;
+
+		struct userReq *container =
+			(struct userReq *)malloc(sizeof(struct userReq));
+		container->command =
+			(char *)malloc((command.length() + 1) * sizeof(char));
+		strcpy(container->command, command.c_str());
 		container->time = requests[i].first;
+
 		pthread_create(&user_requests[i], NULL, begin_process,
 					   (void *)container);
 	}
 
+	// Make sure all are executed before terminating main program
 	for (int i = 0; i < request_count; i++) {
 		pthread_join(user_requests[i], NULL);
 	}
