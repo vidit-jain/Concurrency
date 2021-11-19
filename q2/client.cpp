@@ -152,7 +152,7 @@ void* begin_process(void* arg) {
     int num_bytes_read;
     string output_msg;
     tie(output_msg, num_bytes_read) = read_string_from_socket(socket_fd, buff_sz);
-    cout << output_msg << "\n";
+    cout << output_msg;
     return NULL;
 }
 int main(int argc, char *argv[])
