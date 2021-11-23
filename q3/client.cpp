@@ -33,6 +33,7 @@ using namespace std;
 #define SERVER_PORT 8001
 
 const int buff_sz = 1048576;
+pthread_mutex_t print_lock;
 string read_string_from_socket(int fd) {
 	std::string output;
 	output.resize(buff_sz);
@@ -97,7 +98,9 @@ void *begin_process(void *arg) {
 	string output_msg;
 	output_msg = read_string_from_socket(socket_fd);
 
+    pthread_mutex_lock(&print_lock);
 	cout << output_msg;
+    pthread_mutex_unlock(&print_lock);
 	return NULL;
 }
 int main(int argc, char *argv[]) {

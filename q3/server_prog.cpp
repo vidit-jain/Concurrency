@@ -27,7 +27,7 @@ using namespace std;
 #define BCYN "\e[1;36m"
 #define ANSI_RESET "\x1b[0m"
 
-#define MAX_CLIENTS 100
+#define MAX_CLIENTS 4
 #define SERVER_PORT 8001
 #define MAX_KEY 101
 

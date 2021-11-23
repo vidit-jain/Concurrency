@@ -1,7 +1,7 @@
 cmake-build-debug/
 q1/a.out
 q1/sampleinput.txt
-q2/client
-q2/server
-q3/a.out
-q2/sample.txt
+q3/client
+q3/server
+q2/a.out
+q3/sample.txt
