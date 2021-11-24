@@ -40,7 +40,7 @@ void *studentThread(void *arg) {
 	while (!checkStudentRegistration(s))
 		;
 	pthread_mutex_lock(&print_lock);
-	printf("Student %d has filled in preferences for course registration\n",
+	printf(GRN"Student %d has filled in preferences for course registration\n"WHT,
 		   s->id);
 	pthread_mutex_unlock(&print_lock);
 	while (s->current_preference != 3) {
@@ -57,14 +57,14 @@ void *studentThread(void *arg) {
 				s->selected_course = course_id;
 				s->current_preference = 3;
 				pthread_mutex_lock(&print_lock);
-				printf("Student %d has selected course %s permanently\n", s->id,
+				printf(MAG"Student %d has selected course %s permanently\n"WHT, s->id,
 					   c->name);
 				pthread_mutex_unlock(&print_lock);
 				pthread_mutex_unlock(&s->lock);
 				break;
 			} else { // If the student withdraws;
 				pthread_mutex_lock(&print_lock);
-				printf("Student %d has withdrawn from course %s\n", s->id,
+				printf(YEL"Student %d has withdrawn from course %s\n"WHT, s->id,
 					   c->name);
 				pthread_mutex_unlock(&print_lock);
 			}
@@ -81,8 +81,8 @@ void *studentThread(void *arg) {
 		int next_course = s->preferences[s->current_preference];
 
 		pthread_mutex_lock(&print_lock);
-		printf("Student %d has changed current preference from %s "
-			   "(priority %d) to %s (priority %d)\n",
+		printf(YEL"Student %d has changed current preference from %s "
+			   "(priority %d) to %s (priority %d)\n"WHT,
 			   s->id, courses[prev_course]->name, s->current_preference,
 			   courses[next_course]->name, s->current_preference + 1);
 		pthread_mutex_unlock(&print_lock);
@@ -96,7 +96,7 @@ void *studentThread(void *arg) {
 	// Student ended up not getting
 	if (s->selected_course == -1) {
 		pthread_mutex_lock(&print_lock);
-		printf("Student %d could not get any of his preferred courses\n",
+		printf(RED"Student %d could not get any of his preferred courses\n"WHT,
 			   s->id);
 		pthread_mutex_unlock(&print_lock);
 	}
@@ -110,7 +110,7 @@ void *labThread(void *arg) {
 
 	pthread_cond_wait(&lab->condition_lock, &lab->lock);
 	pthread_mutex_lock(&print_lock);
-	printf("Lab %s no longer has students available for TA ship\n", lab->name);
+	printf(RED"Lab %s no longer has students available for TA ship\n"WHT, lab->name);
 	pthread_mutex_unlock(&print_lock);
 
 	pthread_mutex_unlock(&lab->lock);
@@ -157,7 +157,7 @@ int studentAllocateSeats(Course *c, int max_seats) {
 			if (c->id == course_pref && s->submitted) {
 				s->assigned_course = 1;
 				pthread_mutex_lock(&print_lock);
-				printf("Student %d has been allocated a seat in course %s\n",
+				printf(CYN"Student %d has been allocated a seat in course %s\n"WHT,
 					   s->id, c->name);
 				pthread_mutex_unlock(&print_lock);
 				allocated++;
@@ -211,8 +211,8 @@ void *courseThread(void *arg) {
 
 					// Indicate TA has been allocated
 					pthread_mutex_lock(&print_lock);
-					printf("TA %d from lab %s has been allocated to course %s "
-						   "for his %d%s TA ship\n",
+					printf(CYN"TA %d from lab %s has been allocated to course %s "
+						   "for his %d%s TA ship\n"WHT,
 						   j, iiit_labs[lab_id]->name, course->name,
 						   curr_ta->tutorialstaken,
 						   suffix(curr_ta->tutorialstaken));
@@ -248,18 +248,18 @@ void *courseThread(void *arg) {
 		// Allocate slots for course
 		int slots = randomSeatAllocate(course->course_max_slot);
 		pthread_mutex_lock(&print_lock);
-		printf("Course %s has been allocated %d seats\n", course->name, slots);
+		printf(BLU"Course %s has been allocated %d seats\n"WHT, course->name, slots);
 		pthread_mutex_unlock(&print_lock);
 
 		// Fill seats for course with students
 		int allocated = studentAllocateSeats(course, slots);
 		pthread_mutex_lock(&print_lock);
-		printf("Tutorial has started for course %s with %d seats filled out of "
-			   "%d\n",
+		printf(BLU"Tutorial has started for course %s with %d seats filled out of "
+			   "%d\n"WHT,
 			   course->name, allocated, slots);
 		pthread_mutex_unlock(&print_lock);
 		// Simulate the tutorial
-		sleep(2);
+		sleep(5);
 
 		TA *curr_ta = iiit_labs[labIndex]->tas[taIndex];
 
@@ -269,8 +269,8 @@ void *courseThread(void *arg) {
 			curr_ta->available = 1;
 		// Finish the tutorial
 		pthread_mutex_lock(&print_lock);
-		printf("TA %d from lab %s has completed the tutorial and left the "
-			   "course %s\n",
+		printf(GRN"TA %d from lab %s has completed the tutorial and left the "
+			   "course %s\n"WHT,
 			   taIndex, iiit_labs[labIndex]->name, course->name);
 		pthread_mutex_unlock(&print_lock);
 		curr_ta->course_id = -1;
@@ -299,8 +299,8 @@ void *courseThread(void *arg) {
 	pthread_mutex_unlock(&course_lock);
 
 	pthread_mutex_lock(&print_lock);
-	printf("Course %s doesn't have any TA's eligible and is removed from "
-		   "course offerings\n",
+	printf(RED"Course %s doesn't have any TA's eligible and is removed from "
+		   "course offerings\n"WHT,
 		   course->name);
 	pthread_mutex_unlock(&print_lock);
 	return NULL;

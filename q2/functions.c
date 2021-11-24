@@ -131,8 +131,8 @@ void *spectatorThread(void *arg) {
 			// Checking if he should watch the match at all if the opposing team
 			// enraged him enough
 			if (s->side != 2 && goals_scored[1 - s->side] >= s->max_pain) {
-				s->wakeup_reason =
-					1; // Act like he already woke up if he is enraged
+                // Act like he already woke up if he is enraged
+				s->wakeup_reason = 1;
 				pthread_mutex_unlock(&s->lock);
 			} else {
 				pthread_mutex_unlock(&s->lock);
@@ -141,6 +141,8 @@ void *spectatorThread(void *arg) {
 			}
 			pthread_mutex_unlock(&goal_lock);
 		} else {
+            // Give up if you already had a seat
+            sem_post(&available_seats[s->current_seating]);
 			pthread_mutex_unlock(&s->lock);
 		}
 	}
@@ -191,7 +193,7 @@ void *groupThread(void *arg) {
 		Spectator *s = g->spectators[i];
 		for (int j = 0; j < 3; j++) {
 			// If you should make the spectator enter the jth queue
-			// s->side == j obvious
+			// s->side == j obvious as you can enter your own zone
 			// neutral fan can enter anywhere
 			// Only case left is that a home fan can enter a neutral zone
 			if (s->side == j || s->side == 2 || (s->side == 0 && j == 2)) {
@@ -203,17 +205,17 @@ void *groupThread(void *arg) {
 			}
 		}
 	}
+    // Wait for all threads to terminate
 	for (int i = 0; i < g->spectator_count; i++) {
 		Spectator *s = g->spectators[i];
-		for (int j = 0; j < 3; j++) {
-			if (s->side == j || s->side == 2 || (s->side == 0 && j == 2)) {
+		for (int j = 0; j < 3; j++)
+			if (s->side == j || s->side == 2 || (s->side == 0 && j == 2))
 				pthread_join(spectator_threads[i][j], NULL);
-			}
-		}
 	}
 	pthread_mutex_lock(&print_lock);
 	printf(YEL "Group %d is leaving for dinner\n" WHT, g->group_id + 1);
 	pthread_mutex_unlock(&print_lock);
+
 	pthread_mutex_lock(&group_lock);
 	groups_left--;
 	pthread_mutex_unlock(&group_lock);
