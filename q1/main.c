@@ -5,7 +5,7 @@
 #include <time.h>
 
 int main() {
-    srand(time(0));
+	srand(time(0));
 	pthread_mutex_init(&seconds_lock, NULL);
 	// Input
 	scanf("%d %d %d", &student_count, &lab_count, &course_count);
@@ -83,7 +83,7 @@ int main() {
 			pthread_mutex_unlock(&seconds_lock);
 		}
 	}
-    // Making sure all threads terminate normally
+	// Making sure all threads terminate normally
 	for (int i = 0; i < student_count; i++)
 		pthread_join(student_threads[i], NULL);
 	for (int i = 0; i < course_count; i++)

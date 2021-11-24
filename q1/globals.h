@@ -12,4 +12,5 @@ extern pthread_mutex_t course_lock; // Use lock for updating time
 extern int courses_left;
 extern pthread_mutex_t student_lock; // Use lock for updating time
 extern int students_left;
+extern pthread_mutex_t print_lock;
 #endif // PROCESSSYNCHRONIZATION_GLOBALS_H

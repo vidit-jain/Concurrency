@@ -12,3 +12,4 @@ int student_count, lab_count, course_count;
 int seconds = 0;
 int courses_left = 0;
 int students_left = 0;
+pthread_mutex_t print_lock = PTHREAD_MUTEX_INITIALIZER;
