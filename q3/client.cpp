@@ -106,7 +106,6 @@ void *begin_process(void *arg) {
 int main(int argc, char *argv[]) {
 
 	int request_count;
-	int fd;
 	cin >> request_count;
 	pthread_t user_requests[request_count];
 	vector<pair<int, string>> requests;
