@@ -1,5 +1,12 @@
 #include "functions.h"
 
+char* suffix(int x) {
+    x %= 10;
+    if (x == 1) return "st";
+    if (x == 2) return "nd";
+    if (x == 3) return "rd";
+    return "th";
+}
 // Returns whether student has submitted their preferences or not
 int checkStudentRegistration(Student *s) {
 	// If already submitted, then there's no reason to check time
@@ -183,9 +190,9 @@ void *courseThread(void *arg) {
 
                     // Indicate TA has been allocated
 					printf("TA %d from lab %s has been allocated to course %s "
-						   "for his %d TA ship\n",
+						   "for his %d%s TA ship\n",
 						   j, iiit_labs[lab_id]->name, course->name,
-						   iiit_labs[lab_id]->tas[j]->tutorialstaken);
+						   curr_ta->tutorialstaken, suffix(curr_ta->tutorialstaken));
 					curr_ta->course_id = course->id;
 
 					// Check if the TA has any more attempts to take a tutorial
