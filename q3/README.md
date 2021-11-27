@@ -14,8 +14,8 @@
 - Using pthread_join as we don't want the main function to just end after it creates all the threads, we want to ensure that we send all the requests and receive all the responses.
 
 ## Server
-- A map was used to maintain the dictionary in the server.
-- Since the range of keys used is low (<=100), and the map data structure isn't necessarily thread-safe, I made 101 keys (0-100), and to modify the map value of a key, we just use the respective lock to modify the map value and unlock again. This prevents modification of one key:value pair by multiple threads simultaneously, while permitting threads to modify different keys at the same time.
+- An array of size 101 was used to maintain the dictionary in the server.
+- Since the range of keys used is low (<=100), I made 101 keys (0-100), and to modify the array value at a key, we just use the respective lock to modify the array value and unlock again. This prevents modification of one key:value pair by multiple threads simultaneously, while permitting threads to modify different keys at the same time.
 - multiple functions were made to perform the requests specified, in the instructions, and these functions returned what was to be sent back to the client. 
 
 ## Thead pool
