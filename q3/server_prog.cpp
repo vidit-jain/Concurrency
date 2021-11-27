@@ -199,7 +199,7 @@ void handle_connection(int client_socket_fd) {
 
 	string output = parseQueries(tokens);
 
-	pid_t thread_id = gettid();
+	pthread_t thread_id = pthread_self();
 	string client_message =
 		tokens[0] + ":" + to_string(thread_id) + ":" + output + "\n";
 
