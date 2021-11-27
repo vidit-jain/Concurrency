@@ -28,7 +28,7 @@ using namespace std;
 #define ANSI_RESET "\x1b[0m"
 
 #define MAX_CLIENTS 4
-#define SERVER_PORT 8001
+#define SERVER_PORT 8002
 #define MAX_KEY 101
 
 int pool_size;
@@ -37,7 +37,8 @@ pthread_t *thread_pool;
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 queue<int> clients;
 
-map<int, string> dictionary;
+vector<string> dict(101, "");
+int exists[101] = {0};
 pthread_mutex_t key_lock[MAX_KEY];
 const int buff_sz = 1048576;
 
@@ -46,9 +47,10 @@ string insertDict(int key, string value) {
 	string returnString;
 
 	pthread_mutex_lock(&key_lock[key]);
-	if (dictionary.find(key) == dictionary.end()) {
-		dictionary[key] = value;
+	if (exists[key] == 0) {
+		dict[key] = value;
 		returnString = "Insertion successful";
+		exists[key] = 1;
 	} else {
 		returnString = "Key already exists";
 	}
@@ -60,8 +62,9 @@ string deleteDict(int key) {
 	string returnString;
 
 	pthread_mutex_lock(&key_lock[key]);
-	if (dictionary.find(key) != dictionary.end()) {
-		dictionary.erase(key);
+	if (exists[key]) {
+		dict[key] = "";
+		exists[key] = 0;
 		returnString = "Deletion successful";
 	} else {
 		returnString = "No such key exists";
@@ -74,8 +77,8 @@ string updateDict(int key, string value) {
 	string returnString;
 
 	pthread_mutex_lock(&key_lock[key]);
-	if (dictionary.find(key) != dictionary.end()) {
-		dictionary[key] = value;
+	if (exists[key]) {
+		dict[key] = value;
 		returnString = value;
 	} else {
 		returnString = "Key does not exist";
@@ -91,12 +94,12 @@ string concatDict(int key1, int key2) {
 	pthread_mutex_lock(&key_lock[lowKey]);
 	pthread_mutex_lock(&key_lock[highKey]);
 
-	if (dictionary.find(key1) != dictionary.end() &&
-		dictionary.find(key2) != dictionary.end()) {
-		string val1 = dictionary[key1];
-		string val2 = dictionary[key2];
-		dictionary[key1] += val2;
-		dictionary[key2] += val1;
+	if (exists[key1] &&
+		exists[key2]) {
+		string val1 = dict[key1];
+		string val2 = dict[key2];
+		dict[key1] += val2;
+		dict[key2] += val1;
 		returnString = val2 + val1;
 	} else {
 		returnString =
@@ -111,8 +114,8 @@ string fetchDict(int key) {
 	string returnString;
 
 	pthread_mutex_lock(&key_lock[key]);
-	if (dictionary.find(key) != dictionary.end()) {
-		string val = dictionary[key];
+	if (exists[key]) {
+		string val = dict[key];
 		returnString = val;
 	} else {
 		returnString = "Key does not exist";

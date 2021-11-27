@@ -30,7 +30,7 @@ using namespace std;
 #define BCYN "\e[1;36m"
 #define ANSI_RESET "\x1b[0m"
 
-#define SERVER_PORT 8001
+#define SERVER_PORT 8002
 
 const int buff_sz = 1048576;
 pthread_mutex_t print_lock;
