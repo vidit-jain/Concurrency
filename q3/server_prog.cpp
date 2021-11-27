@@ -28,7 +28,7 @@ using namespace std;
 #define ANSI_RESET "\x1b[0m"
 
 #define MAX_CLIENTS 4
-#define SERVER_PORT 8002
+#define SERVER_PORT 8001
 #define MAX_KEY 101
 
 int pool_size;
@@ -37,7 +37,7 @@ pthread_t *thread_pool;
 pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 queue<int> clients;
 
-vector<string> dict(101, "");
+string dict[101];
 int exists[101] = {0};
 pthread_mutex_t key_lock[MAX_KEY];
 const int buff_sz = 1048576;
