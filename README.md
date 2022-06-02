@@ -14,4 +14,4 @@ being dependant on multiple semaphores.
 
 ## Question 3
 Creation of a multithreaded server which can be accessed by clients concurrently, connected using networking. Server makes use of a thread-pool, 
-and ensures updates to the information are done in a threadsafe way.
+and ensures changes made by clients to the information are done in a threadsafe way.
